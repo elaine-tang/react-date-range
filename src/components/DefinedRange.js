@@ -11,17 +11,23 @@ class DefinedRanges extends Component {
     this.state = {
       rangeOffset: 0,
       focusedInput: -1,
+      label: this.props.label,
     };
     this.handleRangeChange = this.handleRangeChange.bind(this);
   }
-  handleRangeChange(range) {
+
+  handleRangeChange(range, index) {
     const { onChange, ranges, focusedRange } = this.props;
-    const selectedRange = ranges[focusedRange[0]];
+    let selectedRange = ranges[focusedRange[0]];
     if (!onChange || !selectedRange) return;
-    onChange({
-      [selectedRange.key || `range${focusedRange[0] + 1}`]: { ...selectedRange, ...range },
-    });
+    onChange(
+      {
+        [selectedRange.key || `range${focusedRange[0] + 1}`]: { ...selectedRange, ...range },
+      },
+      defaultStaticRanges[index].label
+    );
   }
+
   getSelectedRange(ranges, staticRange) {
     const focusedRangeIndex = ranges.findIndex(range => {
       if (!range.startDate || !range.endDate || range.disabled) return false;
@@ -30,6 +36,15 @@ class DefinedRanges extends Component {
     const selectedRange = ranges[focusedRangeIndex];
     return { selectedRange, focusedRangeIndex };
   }
+
+  getClassName(staticRange) {
+    let className = cx(styles.staticRange);
+    if (staticRange.label === this.props.label) {
+      className += ' active';
+    }
+    return className;
+  }
+
   render() {
     const { onPreviewChange, ranges, rangeColors, className } = this.props;
     return (
@@ -41,16 +56,9 @@ class DefinedRanges extends Component {
             return (
               <button
                 type="button"
-                className={cx(styles.staticRange, {
-                  [styles.staticRangeSelected]: Boolean(selectedRange),
-                })}
-                style={{
-                  color: selectedRange
-                    ? selectedRange.color || rangeColors[focusedRangeIndex]
-                    : null,
-                }}
+                className={this.getClassName(staticRange)}
                 key={i}
-                onClick={() => this.handleRangeChange(staticRange.range(this.props))}
+                onClick={() => this.handleRangeChange(staticRange.range(this.props), i)}
                 onFocus={() => onPreviewChange && onPreviewChange(staticRange.range(this.props))}
                 onMouseOver={() =>
                   onPreviewChange && onPreviewChange(staticRange.range(this.props))
@@ -65,7 +73,7 @@ class DefinedRanges extends Component {
             );
           })}
         </div>
-        <div className={styles.inputRanges}>
+        {/* <div className={styles.inputRanges}>
           {this.props.inputRanges.map((rangeOption, i) => (
             <div className={styles.inputRange} key={i}>
               <input
@@ -88,7 +96,7 @@ class DefinedRanges extends Component {
               <span className={styles.inputRangeLabel}>{rangeOption.label}</span>
             </div>
           ))}
-        </div>
+        </div> */}
         {this.props.footerContent}
       </div>
     );
@@ -106,13 +114,14 @@ DefinedRanges.propTypes = {
   headerContent: PropTypes.any,
   rangeColors: PropTypes.arrayOf(PropTypes.string),
   className: PropTypes.string,
+  label: PropTypes.string,
 };
 
 DefinedRanges.defaultProps = {
   inputRanges: defaultInputRanges,
   staticRanges: defaultStaticRanges,
   ranges: [],
-  rangeColors: ['#3d91ff', '#3ecf8e', '#fed14c'],
+  rangeColors: ['#0077C8', '#3ecf8e', '#fed14c'],
   focusedRange: [0, 0],
 };
 
